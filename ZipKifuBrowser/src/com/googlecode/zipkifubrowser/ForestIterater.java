@@ -1,8 +1,8 @@
-package com.appspot.WebTobinQ.client;
+package com.googlecode.zipkifubrowser;
 
 import java.util.Iterator;
 
-import com.appspot.WebTobinQ.client.ForestNode.Edge;
+import com.googlecode.zipkifubrowser.ForestNode.Edge;
 
 public class ForestIterater<E> implements Iterable<ForestNode<E>>, Iterator<ForestNode<E>>{
 

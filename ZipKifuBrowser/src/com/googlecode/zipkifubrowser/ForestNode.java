@@ -1,4 +1,4 @@
-package com.appspot.WebTobinQ.client;
+package com.googlecode.zipkifubrowser;
 
 
 public class ForestNode <E>{

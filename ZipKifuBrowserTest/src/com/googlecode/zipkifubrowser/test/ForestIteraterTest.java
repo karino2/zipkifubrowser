@@ -1,38 +1,82 @@
-package com.appspot.WebTobinQ.client;
+package com.googlecode.zipkifubrowser.test;
+
 
 import static org.junit.Assert.*;
 
-import org.antlr.runtime.tree.CommonTree;
-import org.antlr.runtime.tree.Tree;
+import java.util.ArrayList;
+
 import org.junit.Test;
 
-import org.antlr.runtime.Token;
 
-import org.antlr.runtime.CommonToken;
 
-import com.appspot.WebTobinQ.client.ForestNode.Edge;
+import com.googlecode.zipkifubrowser.ForestIterater;
+import com.googlecode.zipkifubrowser.ForestNode;
+import com.googlecode.zipkifubrowser.ForestNode.Edge;
+import com.googlecode.zipkifubrowser.ForestNode.Traversable;
+
 
 
 
 public class ForestIteraterTest {
-	class TreeForTest extends CommonTree
+	class TreeForTest
 	{
-		String _tag;
-		TreeForTest(String a, Token token)
+		TreeForTest parent;
+		public String treeTag;
+		public ArrayList<TreeForTest> children;
+		TreeForTest(String tag)
 		{
-			super(token);
-			_tag = a;
+			parent = null;
+			treeTag = tag;
+			children = new ArrayList<TreeForTest>();
+		}
+		TreeForTest(TreeForTest par, String tag)
+		{
+			parent = par;
+			treeTag = tag;
+			children = new ArrayList<TreeForTest>();
+		}
+		
+		void addChild(TreeForTest child)
+		{
+			children.add(child);
+			child.parent = this;
 		}
 	}
-	
-	CommonTree createTree(String tag)
+		
+	TreeForTest createTree(String tag)
 	{
-		return new TreeForTest(tag, new CommonToken(0, tag));
+		return new TreeForTest(tag);
 	}
 
-	public ForestIterater<Tree> createIterater(Tree root)
+	public ForestIterater<TreeForTest> createIterater(TreeForTest root)
 	{
-		return QInterpreter.createIterater(root);
+		ForestNode<TreeForTest> rootNode = 
+			new ForestNode<TreeForTest>(new Traversable<TreeForTest>() {
+
+				@Override
+				public TreeForTest getChild(TreeForTest elem, int i) {
+					return elem.children.get(i);
+				}
+
+				@Override
+				public TreeForTest getParent(TreeForTest elem) {
+					return elem.parent;
+				}
+
+				@Override
+				public int getChildCount(TreeForTest elem) {
+					return elem.children.size();
+				}
+
+				@Override
+				public int getChildIndex(TreeForTest elem) {
+					return elem.parent.children.indexOf(elem);
+				}
+			},
+			Edge.Leading,
+			root);
+			
+		return new ForestIterater<TreeForTest>(rootNode);
 	}
 	
 	@Test
@@ -44,17 +88,17 @@ public class ForestIteraterTest {
 		 *    | +-e
 		 *    c
 		 */
-		CommonTree a = createTree("a");
-		CommonTree b = createTree("b");
-		CommonTree c = createTree("c");
-		CommonTree d = createTree("d");
-		CommonTree e = createTree("e");
+		TreeForTest a = createTree("a");
+		TreeForTest b = createTree("b");
+		TreeForTest c = createTree("c");
+		TreeForTest d = createTree("d");
+		TreeForTest e = createTree("e");
 		a.addChild(b);
 		a.addChild(c);
 		b.addChild(d);
 		b.addChild(e);
 		
-		ForestIterater<Tree> iter = createIterater(a);
+		ForestIterater<TreeForTest> iter = createIterater(a);
 		
 		assertTrue(iter.hasNext());
 		assertNode(Edge.Leading, a, iter.next());
@@ -89,7 +133,7 @@ public class ForestIteraterTest {
 		assertFalse(iter.hasNext());
 	}
 	
-	void assertNode(Edge expectE, Tree expectNode, ForestNode<Tree> actual)
+	void assertNode(Edge expectE, TreeForTest expectNode, ForestNode<TreeForTest> actual)
 	{
 		assertEquals(expectE, actual.getEdge());
 		assertEquals(expectNode, actual.getElement());
