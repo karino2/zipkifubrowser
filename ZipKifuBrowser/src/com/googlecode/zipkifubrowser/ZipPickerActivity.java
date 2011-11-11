@@ -3,62 +3,53 @@ package com.googlecode.zipkifubrowser;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
-import java.util.List;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Toast;
 
 public class ZipPickerActivity extends Activity {
 	File currentDir = null;
+	
+	ListView fileList = null;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.zip_picker_view);
-        ListView list = (ListView)findViewById(R.id.directoryListView);
-        list.setAdapter(new ArrayAdapter<String>(this, R.layout.list_item, listFiles("/sdcard/")));
-        // list.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_single_choice, listDirectory("/sdcard/")));
-        list.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-        list.setItemsCanFocus(false);
+        fileList = (ListView)findViewById(R.id.directoryListView);
+        fileList.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
         
-        list.setOnItemClickListener(new OnItemClickListener(){
+        String initPath = "/sdcard/";
+        showContents(fileList, initPath);
+        
+        
+        fileList.setOnItemClickListener(new OnItemClickListener(){
 
 			@Override
 			public void onItemClick(AdapterView<?> arg0, View arg1, int position,
 					long arg3) {
 				String path = listedFiles[position];
+				if(path.equals(".."))
+				{
+					showContents(fileList, currentDir.getParent());
+					return;
+				}
 				File selectedFile = new File(currentDir, path);
 				if(selectedFile.isDirectory())
 				{
-					String message = "handle dril down here";
-					showMessage("handle dril down here");
+					showContents(fileList, selectedFile.getAbsolutePath());
 					return;
 				}
 				
 				Intent result = new Intent();
-				// TODO: should handle back
 				result.setData(Uri.fromFile(selectedFile));
 	            setResult(RESULT_OK, result);
-	            /*
-				if(selectedFile != null)
-				{
-					result.setData(Uri.fromFile(selectedFile));
-		            setResult(RESULT_OK, result);
-				}
-				else
-				{
-		            setResult(RESULT_CANCELED, result);
-				}
-				*/
 	            finish();
 				
 			}
@@ -67,6 +58,11 @@ public class ZipPickerActivity extends Activity {
         
         
      }
+
+	void showContents(ListView list, String path) {
+		ArrayAdapter<String> adap = new ArrayAdapter<String>(this, R.layout.list_item, listFiles(path));
+        list.setAdapter(adap);
+	}
     
     String[] listedFiles = null;
     String[] listFiles(String path)
@@ -79,7 +75,8 @@ public class ZipPickerActivity extends Activity {
     {
     	currentDir = new File(path);
     	ArrayList<String> ret = new ArrayList<String>();
-    	ret.add("..");
+    	if(currentDir.getParent() != null)
+    		ret.add("..");
     	String[] files = listDirOrZip();
     	for(String fname : files)
     		ret.add(fname);

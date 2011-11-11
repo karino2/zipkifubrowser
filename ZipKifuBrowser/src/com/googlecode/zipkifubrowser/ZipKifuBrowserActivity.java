@@ -24,9 +24,6 @@ public class ZipKifuBrowserActivity extends Activity {
 
 			@Override
 			public void onClick(View arg0) {
-//		        Intent intent = new Intent(Intent.ACTION_PICK);
-		        // intent.setType(ContentResolver.CURSOR_DIR_BASE_TYPE);
-//		        intent.setData(Uri.parse("folder://"+ (new File("/sdcard/")).getPath()));
 		        Intent intent = new Intent(ZipKifuBrowserActivity.this, ZipPickerActivity.class);
 		        startActivityForResult(intent,REQUEST_PICK_DIRECTORY);
 			}

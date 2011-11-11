@@ -14,8 +14,7 @@ public final class R {
         public static final int ic_launcher=0x7f020000;
     }
     public static final class id {
-        public static final int directoryDecideButton=0x7f050004;
-        public static final int directoryListView=0x7f050005;
+        public static final int directoryListView=0x7f050004;
         public static final int folderPathEditText=0x7f050001;
         public static final int linearLayout1=0x7f050000;
         public static final int parseStartButton=0x7f050003;

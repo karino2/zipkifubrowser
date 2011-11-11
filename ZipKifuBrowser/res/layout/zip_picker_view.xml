@@ -4,11 +4,6 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
-
-	<Button android:id="@+id/directoryDecideButton"
-	        android:layout_width="wrap_content" android:layout_height="wrap_content" 
-	        android:text="@string/ok_button_label">
-	</Button>
     <ListView
            android:id="@+id/directoryListView"
            android:layout_width="fill_parent"
