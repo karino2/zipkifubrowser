@@ -1,0 +1,5 @@
+syntax: glob
+ZipKifuBrowser/bin/
+ZipKifuBrowserTest/bin/
+ZipKifuBrowser/gen/
+ZipKifuBrowserTest/gen/
