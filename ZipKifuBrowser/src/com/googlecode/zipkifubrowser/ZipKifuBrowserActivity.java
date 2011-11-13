@@ -1,5 +1,8 @@
 package com.googlecode.zipkifubrowser;
 
+import java.io.IOException;
+import java.util.zip.ZipFile;
+
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -78,22 +81,27 @@ public class ZipKifuBrowserActivity extends Activity {
     	}
 
 		@Override
-		protected String doInBackground(String... arg0) {
-			// TODO Auto-generated method stub
-			// do long task here.
-			// publishProgress("");
-			
-			// dummy wait.
-			int sleepCount = 0;
-			while(!isCancelled())
+		protected String doInBackground(String... arg0) {						
+			try			
 			{
-				try {
-					publishProgress(arg0[0] + " sleep:" + sleepCount++);
-					Thread.sleep(1000);
-				} catch (InterruptedException e) {
-					// do nothing
+				publishProgress("start background reading");
+				KifuStreamHandler ksh = new KifuStreamHandler();
+				ZipReader zr = new ZipReader(new ZipFile(arg0[0]), ksh);
+				
+				zr.start();
+				publishProgress("setup done");
+				
+				int processedNum = 0;
+				while(zr.isRunning() && !isCancelled())
+				{
+					zr.doOne();
+					publishProgress("parse [" + processedNum++ + "] file. " + ksh.getMessage());
 				}
+			}catch(IOException ioe)
+			{
+				this.publishProgress("IOException! " + ioe.getMessage());
 			}
+			
 			return null;
 		}
 		
@@ -141,7 +149,8 @@ public class ZipKifuBrowserActivity extends Activity {
 				EditText et = getFolderPathEditText();
 				et.setText(data.getData().getPath());
 				
-				showMessage(data.getData().getPath() + " selected");
+				showDialog(DIALOG_ZIP_READ_PROGRESS_ID);				
+//				showMessage(data.getData().getPath() + " selected");
     		}
     		break;
     	}
