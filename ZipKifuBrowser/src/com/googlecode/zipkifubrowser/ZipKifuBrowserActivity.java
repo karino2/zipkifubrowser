@@ -95,7 +95,7 @@ public class ZipKifuBrowserActivity extends Activity {
 				while(zr.isRunning() && !isCancelled())
 				{
 					zr.doOne();
-					publishProgress("parse [" + processedNum++ + "] file. " + ksh.getMessage());
+					publishProgress("parse [" + processedNum++ + "] file. " + ksh.getKisenSyousai());
 				}
 			}catch(IOException ioe)
 			{

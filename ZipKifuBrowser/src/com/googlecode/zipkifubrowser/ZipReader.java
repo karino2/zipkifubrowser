@@ -1,7 +1,9 @@
 package com.googlecode.zipkifubrowser;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -39,7 +41,8 @@ public class ZipReader {
 		if(ent.isDirectory())
 			return; // skip.
 		
-		InputStream is = zipFile.getInputStream(ent);		
-		streamHandler.action(is);
+		InputStream is = zipFile.getInputStream(ent);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, "Shift_JIS"));
+		streamHandler.action(reader);
 	}
 }

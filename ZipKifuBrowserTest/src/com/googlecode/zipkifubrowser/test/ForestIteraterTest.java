@@ -3,8 +3,6 @@ package com.googlecode.zipkifubrowser.test;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-
 import org.junit.Test;
 
 
@@ -12,7 +10,6 @@ import org.junit.Test;
 import com.googlecode.zipkifubrowser.ForestIterater;
 import com.googlecode.zipkifubrowser.ForestNode;
 import com.googlecode.zipkifubrowser.ForestNode.Edge;
-import com.googlecode.zipkifubrowser.ForestNode.Traversable;
 import com.googlecode.zipkifubrowser.Tree;
 
 
