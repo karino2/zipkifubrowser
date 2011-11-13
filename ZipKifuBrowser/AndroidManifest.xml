@@ -22,7 +22,10 @@
             </intent-filter>
         </activity>
         <activity android:name=".ZipPickerActivity"
-	        android:label="DirectoryPickerActivity">
+	        android:label="ZipPickerActivity">
+       </activity>
+        <activity android:name=".ListSummaryActivity"
+	        android:label="ListSummaryActivity">
        </activity>
         </application>
 

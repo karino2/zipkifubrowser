@@ -7,13 +7,21 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.Date;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import com.googlecode.zipkifubrowser.KifuStreamHandler;
+import com.googlecode.zipkifubrowser.KifuSummary;
 
 
 public class KifuStreamHandlerTest {
 	KifuStreamHandler target = new KifuStreamHandler();
+	
+	@Before
+	public void setUp()
+	{
+		target.newSummary("dummyZipEntryName");
+	}
 	
 	@Test
 	public void test_readLine() throws IOException
@@ -55,8 +63,13 @@ public class KifuStreamHandlerTest {
 	
 	void assertEqualsDate(int expectedYear, int expectedMonth, int expectedDay, Date actual)
 	{
-		Date expect = new Date(expectedYear-1900, expectedMonth-1, expectedDay);
+		Date expect = createDate(expectedYear, expectedMonth, expectedDay);
 		assertEquals(expect, actual);
+	}
+
+	Date createDate(int expectedYear, int expectedMonth, int expectedDay) {
+		Date expect = new Date(expectedYear-1900, expectedMonth-1, expectedDay);
+		return expect;
 	}
 	
 	@Test
@@ -132,6 +145,18 @@ public class KifuStreamHandlerTest {
 		
 		assertEquals(expected, actual);
 		assertTrue(target.isHeaderEnd());
+	}
+	
+	@Test
+	public void test_kifuSummary_endDateNotExist_useBeginDate()
+	{
+		Date expected = createDate(2003, 5, 4);
+		
+		KifuSummary summary = new KifuSummary("dummyEntryName");
+		summary.setBegin(expected);
+		
+		Date actual = summary.getEnd();
+		assertEquals(expected, actual);
 	}
 		
 	void callParse(String testData) throws IOException {

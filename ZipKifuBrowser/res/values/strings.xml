@@ -2,8 +2,10 @@
 <resources>
 
     <string name="hello">Hello World, KifuBrowserActivity!</string>
-    <string name="app_name">KifuBrowser</string>
+    <string name="app_name">ZipKifuBrowser</string>
     <string name="ok_button_label">OK</string>
     <string name="parse_start_label">Start</string>
+    <string name="list_summary_label">list</string>
+    <string name="recreate_table_label">recreate table</string>
 
 </resources>

@@ -13,11 +13,6 @@ public class ZipReader {
 	StreamHandlable streamHandler;
 	ZipFile zipFile;
 	
-	public static ZipReader create(String path) throws IOException
-	{
-		return new ZipReader(new ZipFile(path), new KifuStreamHandler());
-	}
-	
 	public ZipReader(ZipFile zf, KifuStreamHandler kh)
 	{
 		zipFile = zf;
@@ -43,6 +38,6 @@ public class ZipReader {
 		
 		InputStream is = zipFile.getInputStream(ent);
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is, "Shift_JIS"));
-		streamHandler.action(reader);
+		streamHandler.action(ent.getName(), reader);
 	}
 }

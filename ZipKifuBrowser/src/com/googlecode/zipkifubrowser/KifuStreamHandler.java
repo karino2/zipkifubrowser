@@ -5,6 +5,24 @@ import java.io.IOException;
 import java.util.Date;
 
 public class KifuStreamHandler implements StreamHandlable{
+	
+	KifuSummary summary;
+	KifuSummaryStorable storable;
+
+	public KifuStreamHandler()
+	{
+		this(new KifuSummaryStorable() {
+			@Override
+			public void save(KifuSummary summary) {
+				// do nothing
+			}
+		});
+	}
+	
+	public KifuStreamHandler(KifuSummaryStorable store)
+	{
+		storable = store;
+	}
 
 	public void parse(BufferedReader reader) throws IOException
 	{
@@ -17,45 +35,51 @@ public class KifuStreamHandler implements StreamHandlable{
 		}
 	}
 	
-	public void action(BufferedReader reader) throws IOException
+	public void action(String entryName, BufferedReader reader) throws IOException
 	{
+		newSummary(entryName);
 		parse(reader);
+		storable.save(getSummary());
 	}
 	
-	private Date begin;
-	private Date end;
-	private String kisen;
-	private String senkei;
-	private String sente;
-	private String gote;
-	private String kisenSyousai;
-
+	public KifuSummary getSummary()
+	{
+		return summary;
+	}
+	
+	public void newSummary(String entryName)
+	{
+		summary = new KifuSummary(entryName);
+	}
+	
 	public Date getBegin() {
-		return begin;
+		return summary.getBegin();
 	}
 
 	public Date getEnd() {
-		return end;
+		return summary.getEnd();
 	}
 
 	public String getKisen() {
-		return kisen;
+		return summary.getKisen();
 	}
 
 	public String getKisenSyousai() {
-		return kisenSyousai;
+		if(summary == null)
+			return ""; // if prev action was zip, it might happen.
+		return summary.getKisenSyousai();
 	}
 	
 	public String getSenkei() {
-		return senkei;
+		return summary.getSenkei();
 	}
 
 	public String getSente() {
-		return sente;
+		return summary.getSente();
 	}
 
 	public String getGote() {
-		return gote;
+		return summary.getGote();
 	}
 
 	public boolean isHeaderEnd() {
@@ -72,42 +96,42 @@ public class KifuStreamHandler implements StreamHandlable{
 	public void readLine(String line) {
 		String val = parseField("開始日時：", line);
 		if(!"".equals(val)) {
-			begin = new Date(val);
+			summary.setBegin(new Date(val));
 			return;
 		}
 		val = parseField("終了日時：", line);
 		if(!"".equals(val)) {
-			end = new Date(val);
+			summary.setEnd(new Date(val));
 			return;
 		}
 		
 		val = parseField("棋戦：", line);
 		if(!"".equals(val)) {
-			kisen = val;
+			summary.setKisen(val);
 			return;
 		}
 		
 		val = parseField("戦型：", line);
 		if(!"".equals(val)) {
-			senkei = val;
+			summary.setSenkei(val);
 			return;
 		}
 		
 		val = parseField("先手：", line);
 		if(!"".equals(val)) {
-			sente = val;
+			summary.setSente(val);
 			return;
 		}
 		
 		val = parseField("後手：", line);
 		if(!"".equals(val)) {
-			gote = val;
+			summary.setGote(val);
 			return;
 		}
 		
 		val = parseField("*棋戦詳細：", line);
 		if(!"".equals(val)) {
-			kisenSyousai = val;
+			summary.setKisenSyousai(val);
 			return;
 		}
 

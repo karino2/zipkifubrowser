@@ -6,9 +6,11 @@ import java.util.zip.ZipFile;
 import android.app.Activity;
 import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
@@ -56,8 +58,34 @@ public class ZipKifuBrowserActivity extends Activity {
 			}
         
         });
+        
+        Button listButton = (Button)findViewById(R.id.listSummaryButton);
+        listButton.setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View arg0) {
+		        Intent intent = new Intent(ZipKifuBrowserActivity.this, ListSummaryActivity.class);
+				startActivity(intent);
+			}
+        	
+        });
+        
+        findButton(R.id.recreateTableButton).setOnClickListener(new OnClickListener() {
+
+			@Override
+			public void onClick(View v) {
+				KifuSummaryDatabase db = new KifuSummaryDatabase();
+				db.open(getApplicationContext());
+				db.recreate();
+				db.close();
+				showMessage("recreate done");
+			}
+        	
+        });
+        
     }
     
+    Button findButton(int id) { return (Button)findViewById(id); }
     
     
     protected Dialog onCreateDialog(int id){
@@ -72,21 +100,35 @@ public class ZipKifuBrowserActivity extends Activity {
     	return dialog;
     }
 
+	public static final String LAST_ZIP_PATH_KEY = "last_zip_path";
+
     class ZipReadTask extends AsyncTask<String, String, String> {
-    	
+
+    	Context context;
     	ProgressDialog progress;
-    	ZipReadTask(ProgressDialog prog)
+    	ZipReadTask(ProgressDialog prog, Context ctx)
     	{
     		progress = prog;
+    		context = ctx;
     	}
-
+    	
 		@Override
-		protected String doInBackground(String... arg0) {						
+		protected String doInBackground(String... arg0) {
+			String zipPath = arg0[0];
+			
+			SharedPreferences prefs = getSharedPreferences("History", MODE_PRIVATE);
+	    	SharedPreferences.Editor ed = prefs.edit();
+	        ed.putString(LAST_ZIP_PATH_KEY, zipPath);
+	        ed.commit();
+
+			
+			KifuSummaryDatabase db = new KifuSummaryDatabase();
+			db.open(context);
 			try			
 			{
 				publishProgress("start background reading");
-				KifuStreamHandler ksh = new KifuStreamHandler();
-				ZipReader zr = new ZipReader(new ZipFile(arg0[0]), ksh);
+				KifuStreamHandler ksh = new KifuStreamHandler(db);
+				ZipReader zr = new ZipReader(new ZipFile(zipPath), ksh);
 				
 				zr.start();
 				publishProgress("setup done");
@@ -96,10 +138,18 @@ public class ZipKifuBrowserActivity extends Activity {
 				{
 					zr.doOne();
 					publishProgress("parse [" + processedNum++ + "] file. " + ksh.getKisenSyousai());
+					
+					// for test code
+					if(processedNum >= 100)
+						break;
 				}
 			}catch(IOException ioe)
 			{
 				this.publishProgress("IOException! " + ioe.getMessage());
+			}
+			finally
+			{
+				db.close();
 			}
 			
 			return null;
@@ -125,7 +175,7 @@ public class ZipKifuBrowserActivity extends Activity {
 		progress.setTitle("ReadZip...");
 		progress.setCancelable(true);
 		
-		zipReadTask = new ZipReadTask(progress);
+		zipReadTask = new ZipReadTask(progress, this);
 				
 		zipReadTask.execute(getTargetZipPath());
 		progress.setOnCancelListener(new OnCancelListener() {
