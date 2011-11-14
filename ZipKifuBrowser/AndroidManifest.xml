@@ -31,7 +31,7 @@
 	        android:label="@string/zip_parse_label">
                 <action android:name="android.intent.action.VIEW" />
                 <action android:name="android.intent.action.EDIT" />
-                <data android:mimeType="application/x-zip" />
+                <data android:mimeType="application/zip" />
         </activity>
     </application>
 </manifest>
