@@ -86,7 +86,7 @@ public class KifuSummaryDatabase implements KifuSummaryStorable {
 				"PATH",
 				"BEGIN", "END", "KISEN", "SENKEI", "SENTE", "GOTE", "KISENSYOUSAI" },
 				null, null, null,
-				null, null);	
+				null, "BEGIN DESC");	
 	}
 
 	public KifuSummary fetchKifuSummary(long id) {
