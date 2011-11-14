@@ -17,6 +17,8 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
@@ -35,8 +37,31 @@ public class ListSummaryActivity extends ListActivity {
 		database = new KifuSummaryDatabase();
 		database.open(this);
 		fillData();
-		// registerForContextMenu(getListView());
+        getListView().setOnCreateContextMenuListener(this);		
 	}
+	
+    public static final int MENU_ITEM_PARSE_ZIP = Menu.FIRST;
+    
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        
+        menu.add(0, MENU_ITEM_PARSE_ZIP, 0, R.string.menu_parse_zip)
+        .setShortcut('3', 'p');
+        
+        return true;
+
+    }
+    
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+        case MENU_ITEM_PARSE_ZIP:
+            startActivity(new Intent(this, ZipParseActivity.class));
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
 	
 	Cursor cursor;
 	
