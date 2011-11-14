@@ -92,16 +92,24 @@ public class KifuStreamHandler implements StreamHandlable{
 			return line.substring(fieldHeader.length());
 		return "";
 	}
-
+	
+	private Date createDate(String val) {
+		if(val.length() > 10)
+			val = val.substring(0, 10);
+		return new Date(val);
+	}
+	
 	public void readLine(String line) {
 		String val = parseField("開始日時：", line);
 		if(!"".equals(val)) {
-			summary.setBegin(new Date(val));
+			summary.setBegin(createDate(val));
 			return;
 		}
 		val = parseField("終了日時：", line);
 		if(!"".equals(val)) {
-			summary.setEnd(new Date(val));
+			// for 03057.KI2, end field twice and second one is illegal.
+			if(summary.getRawEnd() == null)
+				summary.setEnd(createDate(val));
 			return;
 		}
 		

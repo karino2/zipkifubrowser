@@ -28,7 +28,22 @@ public class ZipKifuBrowserActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+		SharedPreferences prefs = getSharedPreferences("History", MODE_PRIVATE);
+		String zipPath = prefs.getString(ZipKifuBrowserActivity.LAST_ZIP_PATH_KEY, "");
+
+		
+		// temp implementation. we'll separate activity
+		if(!"".equals(zipPath))
+		{
+			Intent intent = new Intent(this, ListSummaryActivity.class);
+			startActivity(intent);
+			finish();
+			return;
+		}
+		
         setContentView(R.layout.main);
+        
+		getFolderPathEditText().setText(zipPath);
         
         Button browseButton = (Button)findViewById(R.id.pickDirectoryButton);
         browseButton.setOnClickListener(new OnClickListener(){
@@ -128,6 +143,7 @@ public class ZipKifuBrowserActivity extends Activity {
 			{
 				publishProgress("start background reading");
 				KifuStreamHandler ksh = new KifuStreamHandler(db);
+				// KifuStreamHandler ksh = new KifuStreamHandler();
 				ZipReader zr = new ZipReader(new ZipFile(zipPath), ksh);
 				
 				zr.start();
@@ -140,8 +156,10 @@ public class ZipKifuBrowserActivity extends Activity {
 					publishProgress("parse [" + processedNum++ + "] file. " + ksh.getKisenSyousai());
 					
 					// for test code
+					/*
 					if(processedNum >= 100)
 						break;
+						*/
 				}
 			}catch(IOException ioe)
 			{

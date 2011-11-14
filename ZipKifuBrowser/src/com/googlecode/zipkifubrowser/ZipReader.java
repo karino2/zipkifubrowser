@@ -8,6 +8,8 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import android.util.Log;
+
 public class ZipReader {
 	
 	StreamHandlable streamHandler;
@@ -33,11 +35,18 @@ public class ZipReader {
 	public void doOne() throws IOException
 	{
 		ZipEntry ent = entries.nextElement();
-		if(ent.isDirectory())
+		if(ent.isDirectory() ||
+				!ent.getName().endsWith(".KI2"))
 			return; // skip.
 		
 		InputStream is = zipFile.getInputStream(ent);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(is, "Shift_JIS"));
-		streamHandler.action(ent.getName(), reader);
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, "Shift_JIS"), 8*1024);
+		try
+		{
+			streamHandler.action(ent.getName(), reader);			
+		}catch (IllegalArgumentException e)
+		{
+			Log.w("ZKB", "date illegal. name = "+ ent.getName());
+		}
 	}
 }

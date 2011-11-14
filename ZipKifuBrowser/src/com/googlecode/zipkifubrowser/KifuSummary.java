@@ -30,7 +30,7 @@ public class KifuSummary {
 	public Date getEnd() {
 		if(end == null)
 			return begin; // use begin in this case.
-		return end;
+		return getRawEnd();
 	}
 	public void setKisen(String kisen) {
 		this.kisen = kisen;
@@ -61,6 +61,10 @@ public class KifuSummary {
 	}
 	public String getKisenSyousai() {
 		return kisenSyousai;
+	}
+
+	public Date getRawEnd() {
+		return end;
 	}
 
 }

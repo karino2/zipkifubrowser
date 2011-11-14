@@ -81,6 +81,17 @@ public class KifuStreamHandlerTest {
 		assertEqualsDate(2003, 9, 8, actual);
 	}
 	
+	// 04708.KI2
+	@Test
+	public void test_readLine_begin_illegal()
+	{
+		target.readLine("開始日時：1995/01/23s");
+		Date actual = target.getBegin();
+
+		assertEqualsDate(1995, 1, 23, actual);
+	}
+	
+	
 	@Test
 	public void test_readLine_end()
 	{
@@ -89,7 +100,7 @@ public class KifuStreamHandlerTest {
 
 		assertEqualsDate(2003, 9, 9, actual);
 	}
-	
+		
 	@Test
 	public void test_readLine_kisen()
 	{
@@ -151,7 +162,7 @@ public class KifuStreamHandlerTest {
 	public void test_kifuSummary_endDateNotExist_useBeginDate()
 	{
 		Date expected = createDate(2003, 5, 4);
-		
+				
 		KifuSummary summary = new KifuSummary("dummyEntryName");
 		summary.setBegin(expected);
 		

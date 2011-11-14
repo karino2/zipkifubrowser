@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -18,6 +20,8 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.SimpleCursorAdapter.ViewBinder;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class ListSummaryActivity extends ListActivity {
@@ -123,12 +127,27 @@ public class ListSummaryActivity extends ListActivity {
 		cursor = database.fetchAllKifuSummary();
 		startManagingCursor(cursor);
 		
-		String[] from = new String[] { "KISENSYOUSAI" };
-		int[] to = new int[] { R.id.syousaiTextView };
+		String[] from = new String[] { "BEGIN", "KISENSYOUSAI", "SENKEI", "SENTE", "GOTE" };
+		int[] to = new int[] { R.id.beginDateTextView,
+				R.id.syousaiTextView, R.id.senkeiTextView, R.id.senteTextView, R.id.goteTextView };
 
-		// Now create an array adapter and set it to display using our row
-		SimpleCursorAdapter notes = new SimpleCursorAdapter(this,
+		SimpleCursorAdapter summaryAdapter = new SimpleCursorAdapter(this,
 				R.layout.list_summary_item, cursor, from, to);
-		setListAdapter(notes);
+		summaryAdapter.setViewBinder(new ViewBinder(){
+
+			@Override
+			public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+				if(columnIndex == 2)
+				{
+					TextView tv = (TextView)view;
+					SimpleDateFormat  sdf = new SimpleDateFormat("yyyy/MM/dd");
+					tv.setText(sdf.format(new Date(cursor.getLong(columnIndex))));
+					return true;
+				}
+				return false;
+			}
+			
+		});
+		setListAdapter(summaryAdapter);
 	}
 }
