@@ -81,11 +81,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/kisi_label" />
-        <Spinner android:id="@+id/kisiSpinner"
+        <AutoCompleteTextView android:id="@+id/kisiAutoComplete"
+            android:completionThreshold="2"
             android:layout_gravity="center_vertical"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:drawSelectorOnTop="true"
         />
     </LinearLayout>
 </LinearLayout>

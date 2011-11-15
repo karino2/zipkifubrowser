@@ -14,6 +14,7 @@ import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -32,9 +33,11 @@ import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.CursorAdapter;
 import android.widget.DatePicker;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
@@ -455,20 +458,73 @@ public class ListSummaryActivity extends ListActivity {
 				}
 			});
 		}
+		
+		AutoCompleteTextView findAuto(View holder, int id) {
+			return (AutoCompleteTextView)holder.findViewById(id);
+		}
 
-		String[] kisiArray;
+		Cursor kisiCursor;
 		private void bindKisi(final View kisiControl) {
-			findSpinner(kisiControl, R.id.kisiSpinner).setEnabled(filterCondition.isKisiEnabled());	
+			kisiCursor = database.fetchKisi();
+			findAuto(kisiControl, R.id.kisiAutoComplete).setEnabled(filterCondition.isKisiEnabled());
+			findAuto(kisiControl, R.id.kisiAutoComplete).setText(filterCondition.getKisi());
+			/*
+			findAuto(kisiControl, R.id.kisiAutoComplete).setOnItemSelectedListener(new OnItemSelectedListener() {
+
+				@Override
+				public void onItemSelected(AdapterView<?> parent, View view,
+						int position, long id) {
+					kisiCursor.moveToPosition(position);
+					// maybe 1.
+					filterCondition.setKisi(kisiCursor.getString(0));
+					applyNewFilterCondition();
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> parent) {
+					filterCondition.setKisi(null);
+					applyNewFilterCondition();
+				}
+			});
+			*/
+			/*
+			findAuto(kisiControl, R.id.kisiAutoComplete).setAdapter(
+					new SimpleCursorAdapter(ListSummaryActivity.this,  android.R.layout.simple_list_item_1, 
+							kisiCursor, 
+			                new String[] {"SENTE"} ,
+			                new int[] {android.R.id.text1}
+							)
+					);
+					*/
+			findAuto(kisiControl, R.id.kisiAutoComplete).setAdapter(
+					new CursorAdapter(ListSummaryActivity.this, kisiCursor) {
+						
+						@Override
+						public View newView(Context context, Cursor cursor, ViewGroup parent) {
+				            final LayoutInflater inflater = LayoutInflater.from(context);
+				            final TextView view = (TextView) inflater.inflate(
+				                    android.R.layout.simple_dropdown_item_1line, parent, false);
+				            view.setText(cursor.getString(0));
+				            return view;
+						}
+						
+						@Override
+						public void bindView(View view, Context context, Cursor cursor) {
+				            ((TextView) view).setText(cursor.getString(0));
+						}
+					});
+			
 			findCheckBox(kisiControl, R.id.kisiCheck).setChecked(filterCondition.isKisiEnabled());
 			findCheckBox(kisiControl, R.id.kisiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 					filterCondition.setKisiEnabled(isChecked);
-					findSpinner(kisiControl, R.id.kisiSpinner).setEnabled(isChecked);
+					findAuto(kisiControl, R.id.kisiAutoComplete).setEnabled(isChecked);
 					applyNewFilterCondition();
 				}
 			});
-			
+
+			/*
 			Spinner spinner = findSpinner(kisiControl, R.id.kisiSpinner);
 			spinner.setOnTouchListener(new OnTouchListener() {
 				
@@ -477,7 +533,7 @@ public class ListSummaryActivity extends ListActivity {
 					if(kisiArray == null)
 					{
 						Spinner spinner = (Spinner)findSpinner(kisiControl, R.id.kisiSpinner);
-						kisiArray = database.fetchKisi();
+						kisiArray = database.fetchKisiAsArray();
 						
 						ArrayAdapter<String> adapter =
 							new ArrayAdapter<String>(ListSummaryActivity.this,
@@ -502,6 +558,7 @@ public class ListSummaryActivity extends ListActivity {
 				public void onNothingSelected(AdapterView<?> parent) {
 				}
 			});
+			*/
 			
 		}
 

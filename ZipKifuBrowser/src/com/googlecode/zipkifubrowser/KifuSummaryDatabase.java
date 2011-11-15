@@ -105,7 +105,16 @@ public class KifuSummaryDatabase implements KifuSummaryStorable {
 		return list.toArray(new String[0]);
 	}
 	
-	public String[] fetchKisi() {
+	public Cursor fetchKisi() {
+		Cursor cursor1 = database.query(true, SUMMARY_TABLE_NAME,
+				new String[]{"SENTE"}, null, null, null, null, null, null);
+		Cursor cursor2 = database.query(true, SUMMARY_TABLE_NAME,
+				new String[]{"GOTE"}, null, null, null, null, null, null);
+		return new MergedCursor(cursor1, cursor2);
+		
+	}
+	
+	public String[] fetchKisiAsArray() {
 		Set<String> set = new TreeSet<String>();
 		Cursor cursor = database.query(true, SUMMARY_TABLE_NAME,
 				new String[]{"SENTE"}, null, null, null, null, null, null);
