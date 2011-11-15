@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">ZipKifuBrowser</string>
     <string name="ok_button_label">OK</string>
+    <string name="cancel_button_label">Cancel</string>
     <string name="parse_start_label">Parse zip start!</string>
     <string name="list_summary_label">Kifu summary</string>
     <string name="recreate_table_label">clean DB</string>

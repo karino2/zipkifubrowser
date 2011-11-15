@@ -10,11 +10,13 @@ import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -27,14 +29,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CursorAdapter;
@@ -54,8 +59,14 @@ public class ListSummaryActivity extends ListActivity {
 	FilterCondition filterCondition;
     static final int FROM_DATE_DIALOG_ID = 1;
     static final int TO_DATE_DIALOG_ID = 2;    
+    static final int KISI_SELECT_DIALOG_ID = 3;
     
-    
+	AutoCompleteTextView findAuto(View holder, int id) {
+		return (AutoCompleteTextView)holder.findViewById(id);
+	}
+	
+	Cursor kisiCursor;
+	
     @Override
     protected Dialog onCreateDialog(int id) {
     	switch(id) {
@@ -83,6 +94,55 @@ public class ListSummaryActivity extends ListActivity {
 					applyNewFilterCondition();
 				}
 			},  to.getYear()+1900, to.getMonth(), to.getDay());
+    	case KISI_SELECT_DIALOG_ID:
+    		if(kisiCursor == null)
+    			kisiCursor = database.fetchKisi("");
+            LayoutInflater factory = LayoutInflater.from(this);
+            final View view = factory.inflate(R.layout.kisi_select_view, null);
+            findAuto(view, R.id.kisiAutoComplete).setAdapter(
+            		new CursorAdapter(ListSummaryActivity.this, kisiCursor) {
+            			
+            	@Override
+    			public CharSequence convertToString(Cursor cursor) {
+            		return cursor.getString(0);
+    			}
+				
+    	        @Override
+    	        public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
+    	        	return database.fetchKisi(constraint.toString());
+    	        }
+				@Override
+				public View newView(Context context, Cursor cursor, ViewGroup parent) {
+		            final LayoutInflater inflater = LayoutInflater.from(context);
+		            final TextView view = (TextView) inflater.inflate(
+		                    android.R.layout.simple_dropdown_item_1line, parent, false);
+		            view.setText(cursor.getString(0));
+		            return view;
+				}
+				
+				@Override
+				public void bindView(View view, Context context, Cursor cursor) {
+		            ((TextView) view).setText(cursor.getString(0));
+				}
+			});
+
+            return new AlertDialog.Builder(this)
+            .setView(view)
+            .setPositiveButton(R.string.ok_button_label, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+                	AutoCompleteTextView autoComp = findAuto(view, R.id.kisiAutoComplete);
+                	String kisi = autoComp.getText().toString();
+                	filterCondition.setKisi(kisi);
+                	applyNewFilterCondition();
+                }
+            })
+            .setNegativeButton(R.string.cancel_button_label, new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialog, int whichButton) {
+
+                    /* User clicked cancel so do some stuff */
+                }
+            })
+            .create();
     		
     	}
     	return null;
@@ -344,13 +404,24 @@ public class ListSummaryActivity extends ListActivity {
 
 		@Override
 		public long getChildId(int groupPos, int childPos) {
-			return childPos;
+			switch(childPos) {
+			case 0:
+				return R.id.fromControl;
+			case 1:
+				return R.id.toControl;
+			case 2:
+				return R.id.senkeiControl;
+			case 3:
+				return R.id.kisiControl;
+			}
+			throw new RuntimeException("never reached here");
 		}
 
 		@Override
         public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
                 View convertView, ViewGroup parent) {
-			if(convertView != null)
+			if(convertView != null &&
+					convertView.getId() == getChildId(groupPosition, childPosition))
 				return convertView;
 			View child = findChildViewFirstTime(childPosition, parent);
             AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
@@ -459,15 +530,23 @@ public class ListSummaryActivity extends ListActivity {
 			});
 		}
 		
-		AutoCompleteTextView findAuto(View holder, int id) {
-			return (AutoCompleteTextView)holder.findViewById(id);
-		}
 
-		Cursor kisiCursor;
+		TextView findText(View holder, int id) {
+			return (TextView)holder.findViewById(id);
+		}
+		
+		// Cursor kisiCursor;
 		private void bindKisi(final View kisiControl) {
-			kisiCursor = database.fetchKisi();
-			findAuto(kisiControl, R.id.kisiAutoComplete).setEnabled(filterCondition.isKisiEnabled());
-			findAuto(kisiControl, R.id.kisiAutoComplete).setText(filterCondition.getKisi());
+			// kisiCursor = database.fetchKisi();
+			findText(kisiControl, R.id.kisiText).setEnabled(filterCondition.isKisiEnabled());
+			findText(kisiControl, R.id.kisiText).setText(filterCondition.getKisi());
+			findText(kisiControl, R.id.kisiText).setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					showDialog(KISI_SELECT_DIALOG_ID);
+				}
+			});
 			/*
 			findAuto(kisiControl, R.id.kisiAutoComplete).setOnItemSelectedListener(new OnItemSelectedListener() {
 
@@ -496,6 +575,7 @@ public class ListSummaryActivity extends ListActivity {
 							)
 					);
 					*/
+			/*
 			findAuto(kisiControl, R.id.kisiAutoComplete).setAdapter(
 					new CursorAdapter(ListSummaryActivity.this, kisiCursor) {
 						
@@ -513,13 +593,14 @@ public class ListSummaryActivity extends ListActivity {
 				            ((TextView) view).setText(cursor.getString(0));
 						}
 					});
+					*/
 			
 			findCheckBox(kisiControl, R.id.kisiCheck).setChecked(filterCondition.isKisiEnabled());
-			findCheckBox(kisiControl, R.id.kisiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
+			findCheckBox(kisiControl, R.id.kisiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 					filterCondition.setKisiEnabled(isChecked);
-					findAuto(kisiControl, R.id.kisiAutoComplete).setEnabled(isChecked);
+					findText(kisiControl, R.id.kisiText).setEnabled(isChecked);
 					applyNewFilterCondition();
 				}
 			});

@@ -105,11 +105,11 @@ public class KifuSummaryDatabase implements KifuSummaryStorable {
 		return list.toArray(new String[0]);
 	}
 	
-	public Cursor fetchKisi() {
+	public Cursor fetchKisi(String prefix) {
 		Cursor cursor1 = database.query(true, SUMMARY_TABLE_NAME,
-				new String[]{"SENTE"}, null, null, null, null, null, null);
+				new String[]{"SENTE"}, "SENTE LIKE ?", new String[] { prefix+"%" }, null, null, null, null);
 		Cursor cursor2 = database.query(true, SUMMARY_TABLE_NAME,
-				new String[]{"GOTE"}, null, null, null, null, null, null);
+				new String[]{"GOTE"}, "GOTE LIKE ?", new String[] { prefix+"%" }, null, null, null, null);
 		return new MergedCursor(cursor1, cursor2);
 		
 	}
