@@ -10,6 +10,10 @@ import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import android.app.AlertDialog;
+import android.app.DatePickerDialog;
+import android.app.DatePickerDialog.OnDateSetListener;
+import android.app.Dialog;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,9 +21,24 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
+import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.BaseExpandableListAdapter;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
+import android.widget.DatePicker;
+import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleCursorAdapter.ViewBinder;
@@ -28,20 +47,77 @@ import android.widget.Toast;
 
 public class ListSummaryActivity extends ListActivity {
 	KifuSummaryDatabase database;
-	
+	FilterCondition filterCondition;
+    static final int FROM_DATE_DIALOG_ID = 1;
+    static final int TO_DATE_DIALOG_ID = 2;    
+    
+    
+    @Override
+    protected Dialog onCreateDialog(int id) {
+    	switch(id) {
+    	case FROM_DATE_DIALOG_ID:
+    		Date from = filterCondition.getFromOrDefault();
+    		return new DatePickerDialog(this, new OnDateSetListener() {
+				
+				@Override
+				public void onDateSet(DatePicker view, int year, int monthOfYear,
+						int dayOfMonth) {
+					Date from = new Date(year-1900, monthOfYear, dayOfMonth);
+					filterCondition.setFrom(from);
+					updateFilterView();
+				}
+			}, from.getYear()+1900, from.getMonth(), from.getDay());
+    	case TO_DATE_DIALOG_ID:
+    		Date to = filterCondition.getToOrDefault();
+    		return new DatePickerDialog(this, new OnDateSetListener() {
+				
+				@Override
+				public void onDateSet(DatePicker view, int year, int monthOfYear,
+						int dayOfMonth) {
+					Date to = new Date(year-1900, monthOfYear, dayOfMonth);
+					filterCondition.setTo(to);
+					updateFilterView();
+				}
+			},  to.getYear()+1900, to.getMonth(), to.getDay());
+    		
+    	}
+    	return null;
+    }
+    
+    public void updateFilterView()
+    {
+    	ExpandableListView elv = findExpandableFilter();
+    	if(elv.isGroupExpanded(0))
+    	{
+    		updateFromDisplay(elv.findViewById(R.id.fromControl));
+    		updateToDisplay(elv.findViewById(R.id.toControl));
+    	}
+    	refreshSummaryList();
+    }
+		
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		filterCondition = new FilterCondition();
 		setContentView(R.layout.list_summary);
 		this.getListView().setDividerHeight(2);
+		
+		ExpandableListView elv = findExpandableFilter();
+		elv.setAdapter(new ExpandableFilterAdapter(getLayoutInflater()));
+				
 		database = new KifuSummaryDatabase();
 		database.open(this);
 		fillData();
         getListView().setOnCreateContextMenuListener(this);		
 	}
+
+	ExpandableListView findExpandableFilter() {
+		ExpandableListView elv = (ExpandableListView)findViewById(R.id.expandableFilter);
+		return elv;
+	}
 	
     public static final int MENU_ITEM_PARSE_ZIP = Menu.FIRST;
-    
+        
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
@@ -147,16 +223,20 @@ public class ListSummaryActivity extends ListActivity {
 		tmpFile.createNewFile();
 		return tmpFile;
 	}
-
+	
+	private void refreshSummaryList() {
+		newCursor();
+		summaryAdapter.changeCursor(cursor);
+	}
+	SimpleCursorAdapter summaryAdapter;
 	private void fillData() {
-		cursor = database.fetchAllKifuSummary();
-		startManagingCursor(cursor);
+		newCursor();
 		
 		String[] from = new String[] { "BEGIN", "KISENSYOUSAI", "SENKEI", "SENTE", "GOTE" };
 		int[] to = new int[] { R.id.beginDateTextView,
 				R.id.syousaiTextView, R.id.senkeiTextView, R.id.senteTextView, R.id.goteTextView };
 
-		SimpleCursorAdapter summaryAdapter = new SimpleCursorAdapter(this,
+		summaryAdapter = new SimpleCursorAdapter(this,
 				R.layout.list_summary_item, cursor, from, to);
 		summaryAdapter.setViewBinder(new ViewBinder(){
 
@@ -175,4 +255,215 @@ public class ListSummaryActivity extends ListActivity {
 		});
 		setListAdapter(summaryAdapter);
 	}
+
+	void newCursor() {
+		cursor = database.fetchAllKifuSummary(filterCondition.generateQuery());
+		startManagingCursor(cursor);
+	}
+
+	
+	void updateFromDisplay(final View fromControl) {
+		setDate(fromControl, R.id.fromDateEdit, filterCondition.getFromOrDefault());
+		findEditText(fromControl, R.id.fromDateEdit).setEnabled(filterCondition.isFromEnable());
+	}
+
+
+	void updateToDisplay(final View toControl) {
+		setDate(toControl, R.id.toDateEdit, filterCondition.getToOrDefault());
+		findEditText(toControl, R.id.toDateEdit).setEnabled(filterCondition.isToEnable());
+	}
+
+	private void setDate(View holder, int editId, Date dt) {
+		EditText et = (EditText)holder.findViewById(editId);
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+		et.setText(sdf.format(dt));
+	}
+	EditText findEditText(View holder, int id)
+	{
+		return (EditText)holder.findViewById(id);
+	}
+
+	class ExpandableFilterAdapter extends BaseExpandableListAdapter {
+		
+		View filterView;
+		LayoutInflater factory;
+		
+		
+		
+		View getFilterView(ViewGroup parent) {
+			if(filterView == null)
+				filterView = factory.inflate(R.layout.filter_view, parent, false);
+			return filterView;
+		}
+		
+		ExpandableFilterAdapter(LayoutInflater factory)
+		{
+			this.factory = factory;
+		}
+
+		@Override
+		public Object getChild(int groupPos, int childPosition) {
+			// dummy now.
+			switch(childPosition) {
+			case 0:
+				return R.id.fromControl;
+			case 1:
+				return R.id.toControl;
+			case 2:
+				return R.id.senkeiControl;
+			case 3:
+				return R.id.kisiControl;
+			}
+			throw new RuntimeException("never reached here");
+		}
+
+		@Override
+		public long getChildId(int groupPos, int childPos) {
+			return childPos;
+		}
+
+		@Override
+        public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
+                View convertView, ViewGroup parent) {
+			if(convertView != null)
+				return convertView;
+			View child = findChildViewFirstTime(childPosition, parent);
+            AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
+                    ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            child.setLayoutParams(lp);
+			
+			return child;
+		}
+		
+		CheckBox findCheckBox(View holder, int id)
+		{
+			return (CheckBox)holder.findViewById(id);
+		}
+		
+		void bindFromControl(final View fromControl)
+		{
+			updateFromDisplay(fromControl);
+			EditText fromEdit = findEditText(fromControl, R.id.fromDateEdit);
+			fromEdit.setEnabled(filterCondition.isFromEnable());
+			fromEdit.setOnTouchListener(new OnTouchListener() {				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					showDialog(FROM_DATE_DIALOG_ID);
+					return true;
+				}
+			});
+			
+			findCheckBox(fromControl, R.id.fromCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
+				@Override
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					filterCondition.setFromEnable(isChecked);
+					findEditText(fromControl, R.id.fromDateEdit).setEnabled(isChecked);					
+				}
+			});
+		}
+
+		void bindToControl(final View toControl)
+		{
+			updateToDisplay(toControl);
+			EditText toEdit = findEditText(toControl, R.id.toDateEdit);
+			toEdit.setOnTouchListener(new OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					showDialog(TO_DATE_DIALOG_ID);
+					return true;
+				}
+			});
+			findCheckBox(toControl, R.id.toCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
+				@Override
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					filterCondition.setToEnable(isChecked);
+					findEditText(toControl, R.id.toDateEdit).setEnabled(isChecked);					
+				}
+			});
+		}
+		
+		View findChildViewFirstTime(int childPosition, ViewGroup parent) {
+			View view;
+			switch(childPosition) {
+			case 0:
+				view = getFilterView(parent).findViewById(R.id.fromControl);
+				bindFromControl(view);
+				return view;
+			case 1:
+				view = getFilterView(parent).findViewById(R.id.toControl);
+				bindToControl(view);
+				return view;
+			case 2:
+				return getFilterView(parent).findViewById(R.id.senkeiControl);
+			case 3:
+				return getFilterView(parent).findViewById(R.id.kisiControl);
+			}
+			throw new RuntimeException("never reached here");
+		}
+
+
+		@Override
+		public int getChildrenCount(int arg0) {
+			return 4;
+		}
+
+		@Override
+		public Object getGroup(int arg0) {
+			// dummy now.
+			return R.string.filter_label_expand;
+		}
+
+		@Override
+		public int getGroupCount() {
+			return 1;
+		}
+
+		@Override
+		public long getGroupId(int arg0) {
+			return 0;
+		}
+		
+        public TextView getGenericView() {
+            AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
+                    ViewGroup.LayoutParams.FILL_PARENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT);
+
+            TextView textView = new TextView(ListSummaryActivity.this);
+            textView.setLayoutParams(lp);
+            
+            textView.setGravity(Gravity.CENTER_VERTICAL | Gravity.LEFT);
+            textView.setPadding(64, 2, 0, 8);
+            return textView;
+        }
+		
+
+		@Override
+		public View getGroupView(int arg0, boolean isExpanded, View convertView,
+				ViewGroup parent) {
+			TextView ret;
+			if(convertView != null)
+				ret = (TextView)convertView;
+			else
+				ret = getGenericView();
+			
+			if(isExpanded)
+				ret.setText(R.string.filter_label_collapse);
+			else
+				ret.setText(R.string.filter_label_expand);
+			return ret;
+		}
+
+		@Override
+		public boolean hasStableIds() {
+			return true;
+		}
+
+		@Override
+		public boolean isChildSelectable(int arg0, int arg1) {
+			return true;
+		}
+		
+	}
+	
 }

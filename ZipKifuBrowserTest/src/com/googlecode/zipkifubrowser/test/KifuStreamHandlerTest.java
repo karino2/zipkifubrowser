@@ -67,7 +67,7 @@ public class KifuStreamHandlerTest {
 		assertEquals(expect, actual);
 	}
 
-	Date createDate(int expectedYear, int expectedMonth, int expectedDay) {
+	static Date createDate(int expectedYear, int expectedMonth, int expectedDay) {
 		Date expect = new Date(expectedYear-1900, expectedMonth-1, expectedDay);
 		return expect;
 	}

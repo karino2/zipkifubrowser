@@ -7,5 +7,11 @@
     <string name="recreate_table_label">clean DB</string>
     <string name="zip_parse_label">Parse zip</string>
     <string name="menu_parse_zip">DB</string>
-
+    <string name="filter_label_expand">Expand Filter Condition</string>
+    <string name="filter_label_collapse">Collapse Filter Condition</string>
+    <string name="from_label">From</string>
+    <string name="to_label">To</string>
+    <string name="senkei_label">Tactics: </string>
+    <string name="kisi_label">Player: </string>
+    <string name="filter_dialog_title">Set Filter Dialog</string>
 </resources>

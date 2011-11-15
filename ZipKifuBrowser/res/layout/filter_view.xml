@@ -1,0 +1,91 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+	<LinearLayout
+	    android:id="@+id/fromControl"
+	    android:layout_width="fill_parent"
+		android:orientation="horizontal"
+	    android:layout_height="wrap_content" >
+        <CheckBox android:id="@+id/fromCheck"
+            android:paddingBottom="24sp"
+	        android:paddingTop="24sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView android:id="@+id/fromLabel"
+            android:layout_marginLeft="5sp"
+            android:layout_marginRight="5sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/from_label" />
+        <EditText android:id="@+id/fromDateEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+	<LinearLayout
+	    android:id="@+id/toControl"
+	    android:layout_width="fill_parent"
+		android:orientation="horizontal"
+	    android:layout_height="wrap_content" >
+        <CheckBox android:id="@+id/toCheck"
+            android:paddingBottom="24sp"
+	        android:paddingTop="24sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView android:id="@+id/toLabel"
+            android:layout_marginLeft="5sp"
+            android:layout_marginRight="5sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/to_label" />
+        <EditText android:id="@+id/toDateEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+	<LinearLayout
+	    android:id="@+id/senkeiControl"
+	    android:layout_width="fill_parent"
+		android:orientation="horizontal"
+	    android:layout_height="wrap_content" >
+        <CheckBox android:id="@+id/senkeiCheck"
+            android:paddingBottom="24sp"
+	        android:paddingTop="24sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView android:id="@+id/senkeiLabel"
+            android:layout_marginLeft="5sp"
+            android:layout_marginRight="5sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/senkei_label" />
+        <Spinner android:id="@+id/senkeiSpinner"
+            android:layout_gravity="center_vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:drawSelectorOnTop="true"
+        />
+    </LinearLayout>
+	<LinearLayout
+	    android:id="@+id/kisiControl"
+	    android:layout_width="fill_parent"
+		android:orientation="horizontal"
+	    android:layout_height="wrap_content" >
+        <CheckBox android:id="@+id/kisiCheck"
+            android:paddingBottom="24sp"
+	        android:paddingTop="24sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+        <TextView android:id="@+id/kisiLabel"
+            android:layout_marginLeft="5sp"
+            android:layout_marginRight="5sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/kisi_label" />
+        <Spinner android:id="@+id/kisiSpinner"
+            android:layout_gravity="center_vertical"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:drawSelectorOnTop="true"
+        />
+    </LinearLayout>
+</LinearLayout>

@@ -80,13 +80,13 @@ public class KifuSummaryDatabase implements KifuSummaryStorable {
 		database.insert(SUMMARY_TABLE_NAME, null, values);		
 	}
 	
-	public Cursor fetchAllKifuSummary() {
+	public Cursor fetchAllKifuSummary(String selection) {
 		return database.query(SUMMARY_TABLE_NAME,
 				new String[] { "_id",
 				"PATH",
 				"BEGIN", "END", "KISEN", "SENKEI", "SENTE", "GOTE", "KISENSYOUSAI" },
-				null, null, null,
-				null, "BEGIN DESC");	
+				selection, null,
+				null, null, "BEGIN DESC");	
 	}
 
 	public KifuSummary fetchKifuSummary(long id) {
