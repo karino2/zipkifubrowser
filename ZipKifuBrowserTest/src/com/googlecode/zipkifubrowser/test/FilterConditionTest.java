@@ -77,4 +77,27 @@ public class FilterConditionTest {
 		
 		assertEquals(expected, actual);
 	}
+	
+	@Test
+	public void test_generateQuery_setSenkei()
+	{
+		String expected = "SENKEI = ?";
+		
+		filterCondition.setSenkeiEnable(true);
+		filterCondition.setSenkei("HOGEHOGE");
+		String actual = filterCondition.generateQuery();
+		
+		assertEquals(expected, actual);
+		
+		String[] actualArgs = filterCondition.generateQueryArg();
+		assertEquals(1, actualArgs.length);
+		assertEquals("HOGEHOGE", actualArgs[0]);
+		
+	}
+	
+	@Test
+	public void test_generateQueryArg()
+	{
+		assertNull(filterCondition.generateQueryArg());
+	}
 }

@@ -1,5 +1,6 @@
 package com.googlecode.zipkifubrowser;
 
+import java.util.ArrayList;
 import java.util.Date;
 
 public class FilterCondition {
@@ -93,7 +94,22 @@ public class FilterCondition {
 			sb.append("END <= " + getTo().getTime());			
 		}
 		
+		if(isSenkeiEnable()){
+			firstTime = appendAndIfNecessary(firstTime, sb);
+			sb.append("SENKEI = ?");
+		}
+		
 		return sb.toString();
+	}
+	
+	public String[] generateQueryArg() {
+		ArrayList<String> list = new ArrayList<String>();
+		if(isSenkeiEnable()){
+			list.add(getSenkei());
+		}
+		if(list.size() == 0)
+			return null;
+		return list.toArray(new String[0]);
 	}
 
 

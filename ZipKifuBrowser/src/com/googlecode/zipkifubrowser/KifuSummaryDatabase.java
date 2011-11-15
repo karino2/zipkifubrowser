@@ -1,6 +1,7 @@
 package com.googlecode.zipkifubrowser;
 
 import java.sql.Date;
+import java.util.ArrayList;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -80,13 +81,26 @@ public class KifuSummaryDatabase implements KifuSummaryStorable {
 		database.insert(SUMMARY_TABLE_NAME, null, values);		
 	}
 	
-	public Cursor fetchAllKifuSummary(String selection) {
+	public Cursor fetchAllKifuSummary(String selection, String[] selectionArgs) {
 		return database.query(SUMMARY_TABLE_NAME,
 				new String[] { "_id",
 				"PATH",
 				"BEGIN", "END", "KISEN", "SENKEI", "SENTE", "GOTE", "KISENSYOUSAI" },
-				selection, null,
+				selection, selectionArgs,
 				null, null, "BEGIN DESC");	
+	}
+	
+	public String[] fetchSenkei() {
+		ArrayList<String> list = new ArrayList<String>();
+		Cursor cursor = database.query(true, SUMMARY_TABLE_NAME,
+				new String[]{"SENKEI"}, null, null, null, null, null, null);
+		while(!cursor.isLast())
+		{
+			cursor.moveToNext();
+			list.add(cursor.getString(0));
+		}
+		cursor.close();
+		return list.toArray(new String[0]);
 	}
 
 	public KifuSummary fetchKifuSummary(long id) {

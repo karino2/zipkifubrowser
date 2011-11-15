@@ -32,6 +32,9 @@ import android.view.View.OnFocusChangeListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -42,6 +45,7 @@ import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.SimpleCursorAdapter.ViewBinder;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -64,7 +68,7 @@ public class ListSummaryActivity extends ListActivity {
 						int dayOfMonth) {
 					Date from = new Date(year-1900, monthOfYear, dayOfMonth);
 					filterCondition.setFrom(from);
-					updateFilterView();
+					applyNewFilterCondition();
 				}
 			}, from.getYear()+1900, from.getMonth(), from.getDay());
     	case TO_DATE_DIALOG_ID:
@@ -76,7 +80,7 @@ public class ListSummaryActivity extends ListActivity {
 						int dayOfMonth) {
 					Date to = new Date(year-1900, monthOfYear, dayOfMonth);
 					filterCondition.setTo(to);
-					updateFilterView();
+					applyNewFilterCondition();
 				}
 			},  to.getYear()+1900, to.getMonth(), to.getDay());
     		
@@ -84,7 +88,7 @@ public class ListSummaryActivity extends ListActivity {
     	return null;
     }
     
-    public void updateFilterView()
+    public void applyNewFilterCondition()
     {
     	ExpandableListView elv = findExpandableFilter();
     	if(elv.isGroupExpanded(0))
@@ -257,7 +261,9 @@ public class ListSummaryActivity extends ListActivity {
 	}
 
 	void newCursor() {
-		cursor = database.fetchAllKifuSummary(filterCondition.generateQuery());
+		if(cursor != null)
+			stopManagingCursor(cursor);
+		cursor = database.fetchAllKifuSummary(filterCondition.generateQuery(), filterCondition.generateQueryArg());
 		startManagingCursor(cursor);
 	}
 
@@ -281,6 +287,10 @@ public class ListSummaryActivity extends ListActivity {
 	EditText findEditText(View holder, int id)
 	{
 		return (EditText)holder.findViewById(id);
+	}
+
+	Spinner findSpinner(View view, int id) {
+		return (Spinner)view.findViewById(id);
 	}
 
 	class ExpandableFilterAdapter extends BaseExpandableListAdapter {
@@ -358,6 +368,7 @@ public class ListSummaryActivity extends ListActivity {
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 					filterCondition.setFromEnable(isChecked);
 					findEditText(fromControl, R.id.fromDateEdit).setEnabled(isChecked);					
+					applyNewFilterCondition();
 				}
 			});
 		}
@@ -379,9 +390,52 @@ public class ListSummaryActivity extends ListActivity {
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 					filterCondition.setToEnable(isChecked);
 					findEditText(toControl, R.id.toDateEdit).setEnabled(isChecked);					
+					applyNewFilterCondition();
 				}
 			});
 		}
+
+		String[] senkeiArray;
+		
+		private void bindSenkeiControl(final View senkeiControl) {
+			findCheckBox(senkeiControl, R.id.senkeiCheck).setEnabled(filterCondition.isSenkeiEnable());				
+			findCheckBox(senkeiControl, R.id.senkeiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
+				@Override
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					if(senkeiArray == null)
+					{
+						Spinner spinner = (Spinner)findSpinner(senkeiControl, R.id.senkeiSpinner);
+						senkeiArray = database.fetchSenkei();
+						
+						ArrayAdapter<String> adapter =
+							new ArrayAdapter<String>(ListSummaryActivity.this,
+									android.R.layout.simple_spinner_item,
+									senkeiArray);
+				        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+						spinner.setAdapter(adapter);
+					}
+					filterCondition.setSenkeiEnable(isChecked);
+					findSpinner(senkeiControl, R.id.senkeiSpinner).setEnabled(isChecked);
+					applyNewFilterCondition();
+				}
+			});
+			
+			Spinner spinner = findSpinner(senkeiControl, R.id.senkeiSpinner);
+			spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+				@Override
+				public void onItemSelected(AdapterView<?> parent, View view,
+						int position, long id) {
+					filterCondition.setSenkei(senkeiArray[position]);
+					applyNewFilterCondition();
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> parent) {
+				}
+			});
+		}
+
 		
 		View findChildViewFirstTime(int childPosition, ViewGroup parent) {
 			View view;
@@ -395,7 +449,9 @@ public class ListSummaryActivity extends ListActivity {
 				bindToControl(view);
 				return view;
 			case 2:
-				return getFilterView(parent).findViewById(R.id.senkeiControl);
+				view = getFilterView(parent).findViewById(R.id.senkeiControl);
+				bindSenkeiControl(view);
+				return view;
 			case 3:
 				return getFilterView(parent).findViewById(R.id.kisiControl);
 			}
