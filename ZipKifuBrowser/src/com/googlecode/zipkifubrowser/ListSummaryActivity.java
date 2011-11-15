@@ -95,11 +95,19 @@ public class ListSummaryActivity extends ListActivity {
     	}
     	refreshSummaryList();
     }
+    
+    @Override
+    protected void onStop() {
+    	super.onStop();
+		SharedPreferences prefs = getSharedPreferences("History", MODE_PRIVATE);
+		filterCondition.saveTo(prefs);
+    }
 		
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		filterCondition = new FilterCondition();
+		SharedPreferences prefs = getSharedPreferences("History", MODE_PRIVATE);
+		filterCondition = FilterCondition.loadFrom(prefs);
 		setContentView(R.layout.list_summary);
 		this.getListView().setDividerHeight(2);
 		
@@ -267,13 +275,20 @@ public class ListSummaryActivity extends ListActivity {
 	
 	void updateFromDisplay(final View fromControl) {
 		setDate(fromControl, R.id.fromDateEdit, filterCondition.getFromOrDefault());
-		findEditText(fromControl, R.id.fromDateEdit).setEnabled(filterCondition.isFromEnable());
+		findEditText(fromControl, R.id.fromDateEdit).setEnabled(filterCondition.isFromEnabled());
+		findCheckBox(fromControl, R.id.fromCheck).setChecked(filterCondition.isFromEnabled());
+	}
+
+	CheckBox findCheckBox(final View fromControl, int id) {
+		CheckBox cb = (CheckBox)fromControl.findViewById(id);
+		return cb;
 	}
 
 
 	void updateToDisplay(final View toControl) {
 		setDate(toControl, R.id.toDateEdit, filterCondition.getToOrDefault());
-		findEditText(toControl, R.id.toDateEdit).setEnabled(filterCondition.isToEnable());
+		findEditText(toControl, R.id.toDateEdit).setEnabled(filterCondition.isToEnabled());
+		findCheckBox(toControl, R.id.toCheck).setChecked(filterCondition.isToEnabled());
 	}
 
 	private void setDate(View holder, int editId, Date dt) {
@@ -351,7 +366,7 @@ public class ListSummaryActivity extends ListActivity {
 		{
 			updateFromDisplay(fromControl);
 			EditText fromEdit = findEditText(fromControl, R.id.fromDateEdit);
-			fromEdit.setEnabled(filterCondition.isFromEnable());
+			fromEdit.setEnabled(filterCondition.isFromEnabled());
 			fromEdit.setOnTouchListener(new OnTouchListener() {				
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
@@ -363,7 +378,7 @@ public class ListSummaryActivity extends ListActivity {
 			findCheckBox(fromControl, R.id.fromCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					filterCondition.setFromEnable(isChecked);
+					filterCondition.setFromEnabled(isChecked);
 					findEditText(fromControl, R.id.fromDateEdit).setEnabled(isChecked);					
 					applyNewFilterCondition();
 				}
@@ -385,7 +400,7 @@ public class ListSummaryActivity extends ListActivity {
 			findCheckBox(toControl, R.id.toCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-					filterCondition.setToEnable(isChecked);
+					filterCondition.setToEnabled(isChecked);
 					findEditText(toControl, R.id.toDateEdit).setEnabled(isChecked);					
 					applyNewFilterCondition();
 				}
@@ -396,9 +411,21 @@ public class ListSummaryActivity extends ListActivity {
 		
 		private void bindSenkeiControl(final View senkeiControl) {
 			findSpinner(senkeiControl, R.id.senkeiSpinner).setEnabled(filterCondition.isSenkeiEnabled());
+			findCheckBox(senkeiControl, R.id.senkeiCheck).setChecked(filterCondition.isSenkeiEnabled());
 			findCheckBox(senkeiControl, R.id.senkeiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					filterCondition.setSenkeiEnabled(isChecked);
+					findSpinner(senkeiControl, R.id.senkeiSpinner).setEnabled(isChecked);
+					applyNewFilterCondition();
+				}
+			});
+			
+			Spinner spinner = findSpinner(senkeiControl, R.id.senkeiSpinner);
+			spinner.setOnTouchListener(new OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
 					if(senkeiArray == null)
 					{
 						Spinner spinner = (Spinner)findSpinner(senkeiControl, R.id.senkeiSpinner);
@@ -411,13 +438,9 @@ public class ListSummaryActivity extends ListActivity {
 				        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 						spinner.setAdapter(adapter);
 					}
-					filterCondition.setSenkeiEnabled(isChecked);
-					findSpinner(senkeiControl, R.id.senkeiSpinner).setEnabled(isChecked);
-					applyNewFilterCondition();
+					return false;
 				}
 			});
-			
-			Spinner spinner = findSpinner(senkeiControl, R.id.senkeiSpinner);
 			spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 
 				@Override
@@ -436,9 +459,21 @@ public class ListSummaryActivity extends ListActivity {
 		String[] kisiArray;
 		private void bindKisi(final View kisiControl) {
 			findSpinner(kisiControl, R.id.kisiSpinner).setEnabled(filterCondition.isKisiEnabled());	
+			findCheckBox(kisiControl, R.id.kisiCheck).setChecked(filterCondition.isKisiEnabled());
 			findCheckBox(kisiControl, R.id.kisiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					filterCondition.setKisiEnabled(isChecked);
+					findSpinner(kisiControl, R.id.kisiSpinner).setEnabled(isChecked);
+					applyNewFilterCondition();
+				}
+			});
+			
+			Spinner spinner = findSpinner(kisiControl, R.id.kisiSpinner);
+			spinner.setOnTouchListener(new OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
 					if(kisiArray == null)
 					{
 						Spinner spinner = (Spinner)findSpinner(kisiControl, R.id.kisiSpinner);
@@ -451,13 +486,9 @@ public class ListSummaryActivity extends ListActivity {
 				        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 						spinner.setAdapter(adapter);
 					}
-					filterCondition.setKisiEnabled(isChecked);
-					findSpinner(kisiControl, R.id.kisiSpinner).setEnabled(isChecked);
-					applyNewFilterCondition();
+					return false;
 				}
 			});
-			
-			Spinner spinner = findSpinner(kisiControl, R.id.kisiSpinner);
 			spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
 
 				@Override

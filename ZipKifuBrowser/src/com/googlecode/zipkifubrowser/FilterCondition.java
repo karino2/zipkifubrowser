@@ -3,13 +3,16 @@ package com.googlecode.zipkifubrowser;
 import java.util.ArrayList;
 import java.util.Date;
 
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
+
 public class FilterCondition {
 	private Date from;
 	private Date to;
 	private String senkei;
 	private String kisi;
-	private boolean fromEnable;
-	private boolean toEnable;
+	private boolean fromEnabled;
+	private boolean toEnabled;
 	private boolean senkeiEnabled;
 	private boolean kisiEnabled;
 	
@@ -55,17 +58,17 @@ public class FilterCondition {
 	public String getKisi() {
 		return kisi;
 	}
-	public void setFromEnable(boolean fromEnable) {
-		this.fromEnable = fromEnable;
+	public void setFromEnabled(boolean fromEnable) {
+		this.fromEnabled = fromEnable;
 	}
-	public boolean isFromEnable() {
-		return fromEnable;
+	public boolean isFromEnabled() {
+		return fromEnabled;
 	}
-	public void setToEnable(boolean toEnable) {
-		this.toEnable = toEnable;
+	public void setToEnabled(boolean toEnable) {
+		this.toEnabled = toEnable;
 	}
-	public boolean isToEnable() {
-		return toEnable;
+	public boolean isToEnabled() {
+		return toEnabled;
 	}
 	public void setSenkeiEnabled(boolean senkeiEnable) {
 		this.senkeiEnabled = senkeiEnable;
@@ -92,12 +95,12 @@ public class FilterCondition {
 		boolean firstTime = true;
 		StringBuffer sb = new StringBuffer();
 		
-		if(isFromEnable()) {
+		if(isFromEnabled()) {
 			firstTime = appendAndIfNecessary(firstTime, sb);
 			sb.append("BEGIN >= " + getFrom().getTime());
 		}
 
-		if(isToEnable()){
+		if(isToEnabled()){
 			firstTime = appendAndIfNecessary(firstTime, sb);
 			sb.append("END <= " + getTo().getTime());			
 		}
@@ -129,10 +132,51 @@ public class FilterCondition {
 		return list.toArray(new String[0]);
 	}
 
-
 	boolean appendAndIfNecessary(boolean firstTime, StringBuffer sb) {
 		if(!firstTime)
 			sb.append(" AND ");
 		return false;
+	}
+	
+	public void saveTo(SharedPreferences pref)
+	{
+		Editor ed = pref.edit();
+		ed.putBoolean("FILTER_FROM_ENABLED", isFromEnabled());
+		ed.putBoolean("FILTER_TO_ENABLED", isToEnabled());
+		ed.putBoolean("FILTER_SENKEI_ENABLED", isSenkeiEnabled());
+		ed.putBoolean("FILTER_KISI_ENABLED", isKisiEnabled());
+		putDate(ed, "FILTER_FROM", getFrom());
+		putDate(ed, "FILTER_TO", getTo());
+		ed.putString("FILTER_SENKEI", getSenkei());
+		ed.putString("FILTER_KISI", getKisi());		
+		ed.commit();
+	}
+	
+	static Date getDateFromPref(SharedPreferences pref, String key) {
+		if(pref.contains(key))
+			return new Date(pref.getLong(key, 0 ));
+		return null;
+	}
+	
+	public static FilterCondition loadFrom(SharedPreferences pref) {
+		FilterCondition filter = new FilterCondition();
+		filter.setFromEnabled(pref.getBoolean("FILTER_FROM_ENABLED", false));
+		filter.setToEnabled(pref.getBoolean("FILTER_TO_ENABLED", false));
+		filter.setSenkeiEnabled(pref.getBoolean("FILTER_SENKEI_ENABLED", false));
+		filter.setKisiEnabled( pref.getBoolean("FILTER_KISI_ENABLED", false));
+		
+		filter.setFrom(getDateFromPref(pref, "FILTER_FROM"));
+		filter.setTo(getDateFromPref(pref,"FILTER_TO"));
+		filter.setSenkei(pref.getString("FILTER_SENKEI", null));
+		filter.setKisi(pref.getString("FILTER_KISI", null));		
+		return filter;
+	}
+
+
+	void putDate(Editor ed, String key, Date dt) {
+		if(dt != null)
+			ed.putLong(key, dt.getTime());
+		else
+			ed.remove(key);
 	}
 }

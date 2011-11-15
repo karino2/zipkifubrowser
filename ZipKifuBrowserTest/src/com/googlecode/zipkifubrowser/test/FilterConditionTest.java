@@ -42,7 +42,7 @@ public class FilterConditionTest {
 		Date dt = createDate(2000, 10, 4);
 		String expected = "BEGIN >= " + dt.getTime();
 		
-		filterCondition.setFromEnable(true);
+		filterCondition.setFromEnabled(true);
 		filterCondition.setFrom(dt);
 		String actual = filterCondition.generateQuery();
 		
@@ -55,7 +55,7 @@ public class FilterConditionTest {
 		Date dt = createDate(2000, 10, 4);
 		String expected = "END <= " + dt.getTime();
 		
-		filterCondition.setToEnable(true);
+		filterCondition.setToEnabled(true);
 		filterCondition.setTo(dt);
 		String actual = filterCondition.generateQuery();
 		
@@ -69,9 +69,9 @@ public class FilterConditionTest {
 		Date to = createDate(2001, 10, 4);
 		String expected = "BEGIN >= " + from.getTime() + " AND END <= " + to.getTime();
 		
-		filterCondition.setFromEnable(true);
+		filterCondition.setFromEnabled(true);
 		filterCondition.setFrom(from);
-		filterCondition.setToEnable(true);
+		filterCondition.setToEnabled(true);
 		filterCondition.setTo(to);
 		String actual = filterCondition.generateQuery();
 		
