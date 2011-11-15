@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.Dialog;
@@ -27,8 +26,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.View.OnFocusChangeListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
@@ -398,7 +395,7 @@ public class ListSummaryActivity extends ListActivity {
 		String[] senkeiArray;
 		
 		private void bindSenkeiControl(final View senkeiControl) {
-			findCheckBox(senkeiControl, R.id.senkeiCheck).setEnabled(filterCondition.isSenkeiEnable());				
+			findSpinner(senkeiControl, R.id.senkeiSpinner).setEnabled(filterCondition.isSenkeiEnabled());
 			findCheckBox(senkeiControl, R.id.senkeiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -414,7 +411,7 @@ public class ListSummaryActivity extends ListActivity {
 				        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 						spinner.setAdapter(adapter);
 					}
-					filterCondition.setSenkeiEnable(isChecked);
+					filterCondition.setSenkeiEnabled(isChecked);
 					findSpinner(senkeiControl, R.id.senkeiSpinner).setEnabled(isChecked);
 					applyNewFilterCondition();
 				}
@@ -436,6 +433,47 @@ public class ListSummaryActivity extends ListActivity {
 			});
 		}
 
+		String[] kisiArray;
+		private void bindKisi(final View kisiControl) {
+			findSpinner(kisiControl, R.id.kisiSpinner).setEnabled(filterCondition.isKisiEnabled());	
+			findCheckBox(kisiControl, R.id.kisiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
+				@Override
+				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+					if(kisiArray == null)
+					{
+						Spinner spinner = (Spinner)findSpinner(kisiControl, R.id.kisiSpinner);
+						kisiArray = database.fetchKisi();
+						
+						ArrayAdapter<String> adapter =
+							new ArrayAdapter<String>(ListSummaryActivity.this,
+									android.R.layout.simple_spinner_item,
+									kisiArray);
+				        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+						spinner.setAdapter(adapter);
+					}
+					filterCondition.setKisiEnabled(isChecked);
+					findSpinner(kisiControl, R.id.kisiSpinner).setEnabled(isChecked);
+					applyNewFilterCondition();
+				}
+			});
+			
+			Spinner spinner = findSpinner(kisiControl, R.id.kisiSpinner);
+			spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+
+				@Override
+				public void onItemSelected(AdapterView<?> parent, View view,
+						int position, long id) {
+					filterCondition.setKisi(kisiArray[position]);
+					applyNewFilterCondition();
+				}
+
+				@Override
+				public void onNothingSelected(AdapterView<?> parent) {
+				}
+			});
+			
+		}
+
 		
 		View findChildViewFirstTime(int childPosition, ViewGroup parent) {
 			View view;
@@ -453,7 +491,9 @@ public class ListSummaryActivity extends ListActivity {
 				bindSenkeiControl(view);
 				return view;
 			case 3:
-				return getFilterView(parent).findViewById(R.id.kisiControl);
+				view = getFilterView(parent).findViewById(R.id.kisiControl);
+				bindKisi(view);
+				return view;
 			}
 			throw new RuntimeException("never reached here");
 		}

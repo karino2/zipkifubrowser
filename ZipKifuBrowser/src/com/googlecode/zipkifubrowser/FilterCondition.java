@@ -10,8 +10,8 @@ public class FilterCondition {
 	private String kisi;
 	private boolean fromEnable;
 	private boolean toEnable;
-	private boolean senkeiEnable;
-	private boolean kisiEnable;
+	private boolean senkeiEnabled;
+	private boolean kisiEnabled;
 	
 	public void setFrom(Date from) {
 		this.from = from;
@@ -67,17 +67,25 @@ public class FilterCondition {
 	public boolean isToEnable() {
 		return toEnable;
 	}
-	public void setSenkeiEnable(boolean senkeiEnable) {
-		this.senkeiEnable = senkeiEnable;
+	public void setSenkeiEnabled(boolean senkeiEnable) {
+		this.senkeiEnabled = senkeiEnable;
 	}
-	public boolean isSenkeiEnable() {
-		return senkeiEnable;
+	
+	public boolean isSenkeiAvailable() {
+		return isSenkeiEnabled() && getSenkei() != null;
+		
 	}
-	public void setKisiEnable(boolean kisiEnable) {
-		this.kisiEnable = kisiEnable;
+	public boolean isSenkeiEnabled() {
+		return senkeiEnabled;
 	}
-	public boolean isKisiEnable() {
-		return kisiEnable;
+	public void setKisiEnabled(boolean kisiEnable) {
+		this.kisiEnabled = kisiEnable;
+	}
+	public boolean isKisiEnabled() {
+		return kisiEnabled;
+	}
+	public boolean isKisiAvailable() {
+		return isKisiEnabled() && getKisi() != null;
 	}
 	
 	public String generateQuery() {
@@ -94,9 +102,14 @@ public class FilterCondition {
 			sb.append("END <= " + getTo().getTime());			
 		}
 		
-		if(isSenkeiEnable()){
+		if(isSenkeiAvailable()){
 			firstTime = appendAndIfNecessary(firstTime, sb);
 			sb.append("SENKEI = ?");
+		}
+		
+		if(isKisiAvailable()) {
+			firstTime = appendAndIfNecessary(firstTime, sb);
+			sb.append("(SENTE = ? OR GOTE = ?)");
 		}
 		
 		return sb.toString();
@@ -104,8 +117,12 @@ public class FilterCondition {
 	
 	public String[] generateQueryArg() {
 		ArrayList<String> list = new ArrayList<String>();
-		if(isSenkeiEnable()){
+		if(isSenkeiAvailable()){
 			list.add(getSenkei());
+		}
+		if(isKisiAvailable()) {
+			list.add(getKisi());
+			list.add(getKisi());
 		}
 		if(list.size() == 0)
 			return null;

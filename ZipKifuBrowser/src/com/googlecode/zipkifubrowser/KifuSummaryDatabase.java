@@ -2,6 +2,8 @@ package com.googlecode.zipkifubrowser;
 
 import java.sql.Date;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.TreeSet;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -91,9 +93,9 @@ public class KifuSummaryDatabase implements KifuSummaryStorable {
 	}
 	
 	public String[] fetchSenkei() {
-		ArrayList<String> list = new ArrayList<String>();
 		Cursor cursor = database.query(true, SUMMARY_TABLE_NAME,
 				new String[]{"SENKEI"}, null, null, null, null, null, null);
+		ArrayList<String> list = new ArrayList<String>();
 		while(!cursor.isLast())
 		{
 			cursor.moveToNext();
@@ -101,6 +103,28 @@ public class KifuSummaryDatabase implements KifuSummaryStorable {
 		}
 		cursor.close();
 		return list.toArray(new String[0]);
+	}
+	
+	public String[] fetchKisi() {
+		Set<String> set = new TreeSet<String>();
+		Cursor cursor = database.query(true, SUMMARY_TABLE_NAME,
+				new String[]{"SENTE"}, null, null, null, null, null, null);
+		copyTo(cursor, set);
+		cursor.close();
+		cursor = database.query(true, SUMMARY_TABLE_NAME,
+				new String[]{"GOTE"}, null, null, null, null, null, null);
+		copyTo(cursor, set);
+		cursor.close();
+		return set.toArray(new String[0]);
+	}
+
+	void copyTo(Cursor cursor, Set<String> set) {
+		while(!cursor.isLast())
+		{
+			cursor.moveToNext();
+			if(cursor.getString(0) != null)
+				set.add(cursor.getString(0));
+		}
 	}
 
 	public KifuSummary fetchKifuSummary(long id) {

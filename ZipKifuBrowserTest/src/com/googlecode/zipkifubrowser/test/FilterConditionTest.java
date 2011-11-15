@@ -83,7 +83,7 @@ public class FilterConditionTest {
 	{
 		String expected = "SENKEI = ?";
 		
-		filterCondition.setSenkeiEnable(true);
+		filterCondition.setSenkeiEnabled(true);
 		filterCondition.setSenkei("HOGEHOGE");
 		String actual = filterCondition.generateQuery();
 		
@@ -93,6 +93,38 @@ public class FilterConditionTest {
 		assertEquals(1, actualArgs.length);
 		assertEquals("HOGEHOGE", actualArgs[0]);
 		
+	}
+	
+	@Test
+	public void test_generateQuery_setKisi()
+	{
+		String expected = "(SENTE = ? OR GOTE = ?)";
+		
+		filterCondition.setKisiEnabled(true);
+		filterCondition.setKisi("hoge");
+		String actual = filterCondition.generateQuery();
+		
+		assertEquals(expected, actual);
+		
+		String[] actualArgs = filterCondition.generateQueryArg();
+		assertEquals(2, actualArgs.length);
+		assertEquals("hoge", actualArgs[0]);
+		assertEquals("hoge", actualArgs[1]);		
+	}
+	
+	@Test
+	public void test_isSenkeiAvailable_setSenkeiEnable_butNoSenkei_meansNotAvailable()
+	{
+		filterCondition.setSenkeiEnabled(true);
+		assertFalse(filterCondition.isSenkeiAvailable());
+	}
+	
+	@Test
+	public void test_isSenkeiAvailable_setSenkeiEnable_andSetSenkei()
+	{
+		filterCondition.setSenkeiEnabled(true);
+		filterCondition.setSenkei("HOGE");
+		assertTrue(filterCondition.isSenkeiAvailable());
 	}
 	
 	@Test
