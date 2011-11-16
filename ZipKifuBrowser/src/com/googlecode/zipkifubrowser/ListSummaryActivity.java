@@ -153,6 +153,8 @@ public class ListSummaryActivity extends ListActivity {
     	{
     		updateFromDisplay(elv.findViewById(R.id.fromControl));
     		updateToDisplay(elv.findViewById(R.id.toControl));
+    		updateKisiDisplay(elv.findViewById(R.id.kisiControl));
+    		updateSenkeiDisplay(elv.findViewById(R.id.senkeiControl), filterAdapter);
     	}
     	refreshSummaryList();
     }
@@ -163,6 +165,8 @@ public class ListSummaryActivity extends ListActivity {
 		SharedPreferences prefs = getSharedPreferences("History", MODE_PRIVATE);
 		filterCondition.saveTo(prefs);
     }
+    
+    ExpandableFilterAdapter filterAdapter;
 		
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -173,7 +177,8 @@ public class ListSummaryActivity extends ListActivity {
 		this.getListView().setDividerHeight(2);
 		
 		ExpandableListView elv = findExpandableFilter();
-		elv.setAdapter(new ExpandableFilterAdapter(getLayoutInflater()));
+	    filterAdapter = new ExpandableFilterAdapter(getLayoutInflater());
+		elv.setAdapter(filterAdapter);
 				
 		database = new KifuSummaryDatabase();
 		database.open(this);
@@ -339,6 +344,12 @@ public class ListSummaryActivity extends ListActivity {
 		findEditText(fromControl, R.id.fromDateEdit).setEnabled(filterCondition.isFromEnabled());
 		findCheckBox(fromControl, R.id.fromCheck).setChecked(filterCondition.isFromEnabled());
 	}
+	
+	void updateKisiDisplay(final View kisiControl) {
+		findText(kisiControl, R.id.kisiText).setEnabled(filterCondition.isKisiEnabled());
+		findText(kisiControl, R.id.kisiText).setText(filterCondition.getKisi());
+	}
+	
 
 	CheckBox findCheckBox(final View fromControl, int id) {
 		CheckBox cb = (CheckBox)fromControl.findViewById(id);
@@ -361,9 +372,28 @@ public class ListSummaryActivity extends ListActivity {
 	{
 		return (EditText)holder.findViewById(id);
 	}
+	
+	TextView findText(View holder, int id) {
+		return (TextView)holder.findViewById(id);
+	}
 
 	Spinner findSpinner(View view, int id) {
 		return (Spinner)view.findViewById(id);
+	}
+
+	int findIndex(String[] array, String target) {
+		for(int i = 0; i < array.length; i++) {
+			if(array[i].equals(target))
+				return i;
+		}
+		return -1;
+	}
+	void updateSenkeiDisplay(final View senkeiControl, ExpandableFilterAdapter adapter) {
+		findSpinner(senkeiControl, R.id.senkeiSpinner).setEnabled(filterCondition.isSenkeiEnabled());
+		if(adapter.getSenkeiArray() != null) {
+			findSpinner(senkeiControl, R.id.senkeiSpinner).setSelection(findIndex(adapter.getSenkeiArray(), filterCondition.getSenkei()));
+		}
+		findCheckBox(senkeiControl, R.id.senkeiCheck).setChecked(filterCondition.isSenkeiEnabled());
 	}
 
 	class ExpandableFilterAdapter extends BaseExpandableListAdapter {
@@ -446,11 +476,13 @@ public class ListSummaryActivity extends ListActivity {
 			});
 		}
 
-		String[] senkeiArray;
+		private String[] senkeiArray;
+		
 		
 		private void bindSenkeiControl(final View senkeiControl) {
-			findSpinner(senkeiControl, R.id.senkeiSpinner).setEnabled(filterCondition.isSenkeiEnabled());
-			findCheckBox(senkeiControl, R.id.senkeiCheck).setChecked(filterCondition.isSenkeiEnabled());
+			if(senkeiArray != null)
+				setSenkeiArray(findSpinner(senkeiControl, R.id.senkeiSpinner));
+			updateSenkeiDisplay(senkeiControl, this);
 			findCheckBox(senkeiControl, R.id.senkeiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {				
 				@Override
 				public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -465,17 +497,14 @@ public class ListSummaryActivity extends ListActivity {
 				
 				@Override
 				public boolean onTouch(View v, MotionEvent event) {
-					if(senkeiArray == null)
+					Spinner spinner = (Spinner)findSpinner(senkeiControl, R.id.senkeiSpinner);
+					if(getSenkeiArray() == null)
 					{
-						Spinner spinner = (Spinner)findSpinner(senkeiControl, R.id.senkeiSpinner);
-						senkeiArray = database.fetchSenkei();
-						
-						ArrayAdapter<String> adapter =
-							new ArrayAdapter<String>(ListSummaryActivity.this,
-									android.R.layout.simple_spinner_item,
-									senkeiArray);
-				        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-						spinner.setAdapter(adapter);
+						setSenkeiArray(database.fetchSenkei());						
+					}
+					if (spinner.getAdapter() == null)
+					{
+						setSenkeiArray(spinner);
 					}
 					return false;
 				}
@@ -485,7 +514,7 @@ public class ListSummaryActivity extends ListActivity {
 				@Override
 				public void onItemSelected(AdapterView<?> parent, View view,
 						int position, long id) {
-					filterCondition.setSenkei(senkeiArray[position]);
+					filterCondition.setSenkei(getSenkeiArray()[position]);
 					applyNewFilterCondition();
 				}
 
@@ -496,13 +525,9 @@ public class ListSummaryActivity extends ListActivity {
 		}
 		
 
-		TextView findText(View holder, int id) {
-			return (TextView)holder.findViewById(id);
-		}
 		
 		private void bindKisi(final View kisiControl) {
-			findText(kisiControl, R.id.kisiText).setEnabled(filterCondition.isKisiEnabled());
-			findText(kisiControl, R.id.kisiText).setText(filterCondition.getKisi());
+			updateKisiDisplay(kisiControl);
 			findText(kisiControl, R.id.kisiText).setOnClickListener(new OnClickListener() {
 				
 				@Override
@@ -522,7 +547,7 @@ public class ListSummaryActivity extends ListActivity {
 			});
 			
 		}
-		
+
 		View createFilterView(ViewGroup parent) {
 			View fView = factory.inflate(R.layout.filter_view, parent, false);
 			View view;
@@ -596,6 +621,23 @@ public class ListSummaryActivity extends ListActivity {
 		@Override
 		public boolean isChildSelectable(int arg0, int arg1) {
 			return true;
+		}
+
+		void setSenkeiArray(Spinner spinner) {
+			ArrayAdapter<String> adapter =
+				new ArrayAdapter<String>(ListSummaryActivity.this,
+						android.R.layout.simple_spinner_item,
+						senkeiArray);
+			adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+			spinner.setAdapter(adapter);
+		}
+
+		void setSenkeiArray(String[] senkeiArray) {
+			this.senkeiArray = senkeiArray;
+		}
+
+		String[] getSenkeiArray() {
+			return senkeiArray;
 		}
 		
 	}
