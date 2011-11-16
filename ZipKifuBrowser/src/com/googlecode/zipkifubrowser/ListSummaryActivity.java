@@ -34,17 +34,15 @@ import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.CursorAdapter;
 import android.widget.DatePicker;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ListView;
@@ -370,17 +368,8 @@ public class ListSummaryActivity extends ListActivity {
 
 	class ExpandableFilterAdapter extends BaseExpandableListAdapter {
 		
-		View filterView;
 		LayoutInflater factory;
-		
-		
-		
-		View getFilterView(ViewGroup parent) {
-			if(filterView == null)
-				filterView = factory.inflate(R.layout.filter_view, parent, false);
-			return filterView;
-		}
-		
+				
 		ExpandableFilterAdapter(LayoutInflater factory)
 		{
 			this.factory = factory;
@@ -388,42 +377,18 @@ public class ListSummaryActivity extends ListActivity {
 
 		@Override
 		public Object getChild(int groupPos, int childPosition) {
-			// dummy now.
-			switch(childPosition) {
-			case 0:
-				return R.id.fromControl;
-			case 1:
-				return R.id.toControl;
-			case 2:
-				return R.id.senkeiControl;
-			case 3:
-				return R.id.kisiControl;
-			}
-			throw new RuntimeException("never reached here");
+			return null;
 		}
 
 		@Override
 		public long getChildId(int groupPos, int childPos) {
-			switch(childPos) {
-			case 0:
-				return R.id.fromControl;
-			case 1:
-				return R.id.toControl;
-			case 2:
-				return R.id.senkeiControl;
-			case 3:
-				return R.id.kisiControl;
-			}
-			throw new RuntimeException("never reached here");
+			return R.layout.filter_view;
 		}
 
 		@Override
         public View getChildView(int groupPosition, int childPosition, boolean isLastChild,
                 View convertView, ViewGroup parent) {
-			if(convertView != null &&
-					convertView.getId() == getChildId(groupPosition, childPosition))
-				return convertView;
-			View child = findChildViewFirstTime(childPosition, parent);
+			View child = createFilterView(parent);
             AbsListView.LayoutParams lp = new AbsListView.LayoutParams(
                     ViewGroup.LayoutParams.FILL_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             child.setLayoutParams(lp);
@@ -535,9 +500,7 @@ public class ListSummaryActivity extends ListActivity {
 			return (TextView)holder.findViewById(id);
 		}
 		
-		// Cursor kisiCursor;
 		private void bindKisi(final View kisiControl) {
-			// kisiCursor = database.fetchKisi();
 			findText(kisiControl, R.id.kisiText).setEnabled(filterCondition.isKisiEnabled());
 			findText(kisiControl, R.id.kisiText).setText(filterCondition.getKisi());
 			findText(kisiControl, R.id.kisiText).setOnClickListener(new OnClickListener() {
@@ -547,53 +510,6 @@ public class ListSummaryActivity extends ListActivity {
 					showDialog(KISI_SELECT_DIALOG_ID);
 				}
 			});
-			/*
-			findAuto(kisiControl, R.id.kisiAutoComplete).setOnItemSelectedListener(new OnItemSelectedListener() {
-
-				@Override
-				public void onItemSelected(AdapterView<?> parent, View view,
-						int position, long id) {
-					kisiCursor.moveToPosition(position);
-					// maybe 1.
-					filterCondition.setKisi(kisiCursor.getString(0));
-					applyNewFilterCondition();
-				}
-
-				@Override
-				public void onNothingSelected(AdapterView<?> parent) {
-					filterCondition.setKisi(null);
-					applyNewFilterCondition();
-				}
-			});
-			*/
-			/*
-			findAuto(kisiControl, R.id.kisiAutoComplete).setAdapter(
-					new SimpleCursorAdapter(ListSummaryActivity.this,  android.R.layout.simple_list_item_1, 
-							kisiCursor, 
-			                new String[] {"SENTE"} ,
-			                new int[] {android.R.id.text1}
-							)
-					);
-					*/
-			/*
-			findAuto(kisiControl, R.id.kisiAutoComplete).setAdapter(
-					new CursorAdapter(ListSummaryActivity.this, kisiCursor) {
-						
-						@Override
-						public View newView(Context context, Cursor cursor, ViewGroup parent) {
-				            final LayoutInflater inflater = LayoutInflater.from(context);
-				            final TextView view = (TextView) inflater.inflate(
-				                    android.R.layout.simple_dropdown_item_1line, parent, false);
-				            view.setText(cursor.getString(0));
-				            return view;
-						}
-						
-						@Override
-						public void bindView(View view, Context context, Cursor cursor) {
-				            ((TextView) view).setText(cursor.getString(0));
-						}
-					});
-					*/
 			
 			findCheckBox(kisiControl, R.id.kisiCheck).setChecked(filterCondition.isKisiEnabled());
 			findCheckBox(kisiControl, R.id.kisiCheck).setOnCheckedChangeListener(new OnCheckedChangeListener() {
@@ -604,73 +520,26 @@ public class ListSummaryActivity extends ListActivity {
 					applyNewFilterCondition();
 				}
 			});
-
-			/*
-			Spinner spinner = findSpinner(kisiControl, R.id.kisiSpinner);
-			spinner.setOnTouchListener(new OnTouchListener() {
-				
-				@Override
-				public boolean onTouch(View v, MotionEvent event) {
-					if(kisiArray == null)
-					{
-						Spinner spinner = (Spinner)findSpinner(kisiControl, R.id.kisiSpinner);
-						kisiArray = database.fetchKisiAsArray();
-						
-						ArrayAdapter<String> adapter =
-							new ArrayAdapter<String>(ListSummaryActivity.this,
-									android.R.layout.simple_spinner_item,
-									kisiArray);
-				        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-						spinner.setAdapter(adapter);
-					}
-					return false;
-				}
-			});
-			spinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-
-				@Override
-				public void onItemSelected(AdapterView<?> parent, View view,
-						int position, long id) {
-					filterCondition.setKisi(kisiArray[position]);
-					applyNewFilterCondition();
-				}
-
-				@Override
-				public void onNothingSelected(AdapterView<?> parent) {
-				}
-			});
-			*/
 			
 		}
-
 		
-		View findChildViewFirstTime(int childPosition, ViewGroup parent) {
+		View createFilterView(ViewGroup parent) {
+			View fView = factory.inflate(R.layout.filter_view, parent, false);
 			View view;
-			switch(childPosition) {
-			case 0:
-				view = getFilterView(parent).findViewById(R.id.fromControl);
-				bindFromControl(view);
-				return view;
-			case 1:
-				view = getFilterView(parent).findViewById(R.id.toControl);
-				bindToControl(view);
-				return view;
-			case 2:
-				view = getFilterView(parent).findViewById(R.id.senkeiControl);
-				bindSenkeiControl(view);
-				return view;
-			case 3:
-				view = getFilterView(parent).findViewById(R.id.kisiControl);
-				bindKisi(view);
-				return view;
-			}
-			throw new RuntimeException("never reached here");
+			view = fView.findViewById(R.id.fromControl);
+			bindFromControl(view);
+			view = fView.findViewById(R.id.toControl);
+			bindToControl(view);
+			view = fView.findViewById(R.id.senkeiControl);
+			bindSenkeiControl(view);
+			view = fView.findViewById(R.id.kisiControl);
+			bindKisi(view);
+			return fView;
 		}
-
 
 		@Override
 		public int getChildrenCount(int arg0) {
-			return 4;
+			return 1;
 		}
 
 		@Override
